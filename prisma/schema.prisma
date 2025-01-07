@@ -1,0 +1,155 @@
+// This is your Prisma schema file
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  name          String?
+  password      String
+  role          Role        @default(PET_OWNER)
+  pets          Pet[]
+  reservations  Reservation[]
+  payments      Payment[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+}
+
+model Pet {
+  id            String       @id @default(cuid())
+  name          String
+  breed         String
+  age           Int
+  ownerId       String
+  owner         User        @relation(fields: [ownerId], references: [id])
+  medicalInfo   String?     @db.Text
+  dietaryNeeds  String?     @db.Text
+  vaccinations  Vaccination[]
+  reservations  Reservation[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+}
+
+model Vaccination {
+  id            String       @id @default(cuid())
+  type          String
+  date          DateTime
+  expiryDate    DateTime
+  petId         String
+  pet           Pet         @relation(fields: [petId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Kennel {
+  id            String       @id @default(cuid())
+  name          String
+  size          KennelSize
+  status        KennelStatus @default(AVAILABLE)
+  price         Float
+  facilityId    String
+  facility      Facility    @relation(fields: [facilityId], references: [id])
+  reservations  Reservation[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+}
+
+model Reservation {
+  id            String       @id @default(cuid())
+  startDate     DateTime
+  endDate       DateTime
+  status        ReservationStatus
+  petId         String
+  pet           Pet         @relation(fields: [petId], references: [id])
+  kennelId      String
+  kennel        Kennel      @relation(fields: [kennelId], references: [id])
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  payment       Payment?
+  addOnServices AddOnService[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+}
+
+model Payment {
+  id            String       @id @default(cuid())
+  amount        Float
+  status        PaymentStatus
+  stripePaymentId String?
+  reservationId String      @unique
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+}
+
+model Facility {
+  id            String       @id @default(cuid())
+  name          String
+  address       String
+  phone         String
+  email         String
+  operatingHours Json
+  kennels       Kennel[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+}
+
+model AddOnService {
+  id            String       @id @default(cuid())
+  name          String
+  description   String
+  price         Float
+  reservations  Reservation[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+}
+
+enum Role {
+  PET_OWNER
+  STAFF
+  MANAGER
+  ADMIN
+}
+
+enum KennelSize {
+  SMALL
+  MEDIUM
+  LARGE
+  EXTRA_LARGE
+}
+
+enum KennelStatus {
+  AVAILABLE
+  OCCUPIED
+  MAINTENANCE
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  FAILED
+}
