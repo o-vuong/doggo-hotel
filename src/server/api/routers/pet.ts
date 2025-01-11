@@ -1,47 +1,80 @@
-import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { TRPCError } from "@trpc/server";
-import { Role } from "@prisma/client";
+/**
+ * Pet Management Router
+ * 
+ * Handles all pet-related operations including creating, reading, updating, and deleting pets.
+ * Implements role-based access control to ensure only authorized users can perform actions.
+ * 
+ * @module pet
+ */
 
+import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  adminProcedure,
+} from "../trpc";
+
+/**
+ * Input validation schema for creating/updating a pet
+ */
 const petSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  breed: z.string().min(1, "Breed is required"),
-  age: z.number().min(0, "Age must be a positive number"),
-  medicalInfo: z.string().optional(),
-  dietaryNeeds: z.string().optional(),
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  breed: z.string().min(2, "Breed must be at least 2 characters"),
+  dateOfBirth: z.date(),
+  weight: z.number().positive("Weight must be positive"),
+  medicalConditions: z.string().optional(),
+  dietaryRestrictions: z.string().optional(),
+  medications: z.string().optional(),
+  behavioralNotes: z.string().optional(),
+  emergencyContactName: z.string().min(2, "Emergency contact name required"),
+  emergencyContactPhone: z.string().min(10, "Valid phone number required"),
+  vetName: z.string().optional(),
+  vetPhone: z.string().optional(),
 });
 
 export const petRouter = createTRPCRouter({
-  getAll: protectedProcedure.query(async ({ ctx }) => {
-    // Only admin and staff can view all pets
-    if (![Role.ADMIN, Role.STAFF, Role.MANAGER].includes(ctx.session.user.role)) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Not authorized to view all pets",
+  /**
+   * Create a new pet
+   * 
+   * @param {Object} input - Pet data matching petSchema
+   * @returns {Promise<Pet>} Created pet object
+   * @throws {TRPCError} If validation fails or user is unauthorized
+   */
+  create: protectedProcedure
+    .input(petSchema)
+    .mutation(async ({ ctx, input }) => {
+      return ctx.prisma.pet.create({
+        data: {
+          ...input,
+          ownerId: ctx.session.user.id,
+        },
       });
-    }
+    }),
 
-    return ctx.prisma.pet.findMany({
-      where: { deletedAt: null },
-      include: {
-        owner: true,
-        vaccinations: true,
-      },
-    });
-  }),
-
+  /**
+   * Get all pets owned by the current user
+   * 
+   * @returns {Promise<Pet[]>} Array of pet objects
+   */
   getByOwnerId: protectedProcedure.query(async ({ ctx }) => {
     return ctx.prisma.pet.findMany({
       where: {
         ownerId: ctx.session.user.id,
-        deletedAt: null,
       },
-      include: {
-        vaccinations: true,
+      orderBy: {
+        name: "asc",
       },
     });
   }),
 
+  /**
+   * Get a single pet by ID
+   * 
+   * @param {Object} input - Pet ID
+   * @returns {Promise<Pet|null>} Pet object or null if not found
+   * @throws {TRPCError} If pet not found or user unauthorized
+   */
   getById: protectedProcedure
     .input(z.string())
     .query(async ({ ctx, input }) => {
@@ -49,12 +82,9 @@ export const petRouter = createTRPCRouter({
         where: { id: input },
         include: {
           owner: true,
-          vaccinations: true,
           reservations: {
-            include: {
-              kennel: true,
-              payment: true,
-            },
+            orderBy: { startDate: "desc" },
+            take: 5,
           },
         },
       });
@@ -66,10 +96,10 @@ export const petRouter = createTRPCRouter({
         });
       }
 
-      // Check if user is authorized to view this pet
+      // Only allow owner or admin to view pet details
       if (
         pet.ownerId !== ctx.session.user.id &&
-        ![Role.ADMIN, Role.STAFF, Role.MANAGER].includes(ctx.session.user.role)
+        ctx.session.user.role !== "ADMIN"
       ) {
         throw new TRPCError({
           code: "FORBIDDEN",
@@ -80,19 +110,13 @@ export const petRouter = createTRPCRouter({
       return pet;
     }),
 
-  create: protectedProcedure
-    .input(petSchema)
-    .mutation(async ({ ctx, input }) => {
-      return ctx.prisma.pet.create({
-        data: {
-          ...input,
-          owner: {
-            connect: { id: ctx.session.user.id },
-          },
-        },
-      });
-    }),
-
+  /**
+   * Update a pet's information
+   * 
+   * @param {Object} input - Updated pet data and pet ID
+   * @returns {Promise<Pet>} Updated pet object
+   * @throws {TRPCError} If pet not found or user unauthorized
+   */
   update: protectedProcedure
     .input(
       z.object({
@@ -112,10 +136,10 @@ export const petRouter = createTRPCRouter({
         });
       }
 
-      // Check if user is authorized to update this pet
+      // Only allow owner or admin to update pet
       if (
         pet.ownerId !== ctx.session.user.id &&
-        ![Role.ADMIN, Role.MANAGER].includes(ctx.session.user.role)
+        ctx.session.user.role !== "ADMIN"
       ) {
         throw new TRPCError({
           code: "FORBIDDEN",
@@ -129,6 +153,13 @@ export const petRouter = createTRPCRouter({
       });
     }),
 
+  /**
+   * Delete a pet
+   * 
+   * @param {string} input - Pet ID to delete
+   * @returns {Promise<Pet>} Deleted pet object
+   * @throws {TRPCError} If pet not found or user unauthorized
+   */
   delete: protectedProcedure
     .input(z.string())
     .mutation(async ({ ctx, input }) => {
@@ -143,10 +174,10 @@ export const petRouter = createTRPCRouter({
         });
       }
 
-      // Check if user is authorized to delete this pet
+      // Only allow owner or admin to delete pet
       if (
         pet.ownerId !== ctx.session.user.id &&
-        ![Role.ADMIN, Role.MANAGER].includes(ctx.session.user.role)
+        ctx.session.user.role !== "ADMIN"
       ) {
         throw new TRPCError({
           code: "FORBIDDEN",
@@ -154,10 +185,28 @@ export const petRouter = createTRPCRouter({
         });
       }
 
-      // Soft delete
-      return ctx.prisma.pet.update({
+      return ctx.prisma.pet.delete({
         where: { id: input },
-        data: { deletedAt: new Date() },
       });
     }),
+
+  /**
+   * Admin only: Get all pets in the system
+   * 
+   * @returns {Promise<Pet[]>} Array of all pet objects
+   */
+  getAll: adminProcedure.query(async ({ ctx }) => {
+    return ctx.prisma.pet.findMany({
+      include: {
+        owner: true,
+        reservations: {
+          orderBy: { startDate: "desc" },
+          take: 1,
+        },
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+  }),
 });
