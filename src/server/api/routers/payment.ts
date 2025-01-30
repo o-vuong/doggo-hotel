@@ -11,7 +11,6 @@ const paymentSchema = z.object({
 });
 
 export const paymentRouter = createTRPCRouter({
-  // Create a new payment
   create: protectedProcedure
     .input(paymentSchema)
     .mutation(async ({ ctx, input }) => {
@@ -21,8 +20,6 @@ export const paymentRouter = createTRPCRouter({
 
       return payment;
     }),
-
-  // Get payment by ID
   getById: protectedProcedure
     .input(z.string())
     .query(async ({ ctx, input }) => {
@@ -39,8 +36,6 @@ export const paymentRouter = createTRPCRouter({
 
       return payment;
     }),
-
-  // Update payment
   update: protectedProcedure
     .input(paymentSchema.partial().extend({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
@@ -53,8 +48,6 @@ export const paymentRouter = createTRPCRouter({
 
       return payment;
     }),
-
-  // Delete payment (soft delete)
   delete: protectedProcedure
     .input(z.string())
     .mutation(async ({ ctx, input }) => {

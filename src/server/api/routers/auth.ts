@@ -9,7 +9,7 @@
  */
 
 import { z } from "zod";
-import { hash } from "bcrypt";
+import { hash as bcryptHash } from "bcrypt";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 
@@ -53,28 +53,20 @@ export const authRouter = createTRPCRouter({
       if (exists) {
         throw new TRPCError({
           code: "CONFLICT",
-          message: "User already exists",
+          message: "User with this email already exists",
         });
       }
 
-      // Hash password with bcrypt
-      const hashedPassword = await hash(password, 10);
-
-      // Create new user
+      // Hash the password and create the user
+      const hashedPassword = await bcryptHash(password, 10);
       const user = await ctx.prisma.user.create({
         data: {
-          name,
           email,
+          name,
           password: hashedPassword,
-          role: "PET_OWNER", // Default role for new registrations
         },
       });
 
-      return {
-        status: 201,
-        message: "Account created successfully",
-        email: user.email,
-        password: password, // Return unhashed password for immediate sign-in
-      };
+      return user;
     }),
 });
