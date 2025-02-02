@@ -12,6 +12,11 @@ import { z } from "zod";
 import { hash as bcryptHash } from "bcrypt";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
+import NextAuth from "next-auth";
+import Providers from "next-auth/providers";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { prisma } from "../../db";
+import { getSession } from "next-auth/react";
 
 /**
  * Input validation schema for user registration
@@ -21,6 +26,46 @@ const registerSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
+
+export default NextAuth({
+  providers: [
+    Providers.Credentials({
+      // Add your custom credential provider logic here
+    }),
+  ],
+  adapter: PrismaAdapter(prisma),
+  session: {
+    jwt: true,
+  },
+  callbacks: {
+    async session(session, user) {
+      session.user = user;
+      return session;
+    },
+    async signIn(user, account, profile) {
+      return true;
+    },
+  },
+});
+
+// RBAC Middleware
+export const rbacMiddleware = async (req, res, next) => {
+  const session = await getSession({ req });
+  if (!session || !session.user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  const hasPermission = await prisma.permission.findFirst({
+    where: {
+      role: session.user.role,
+      resource: "auth",
+      action: req.method.toLowerCase(),
+    },
+  });
+  if (!hasPermission) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+  next();
+};
 
 export const authRouter = createTRPCRouter({
   /**

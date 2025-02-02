@@ -20,6 +20,17 @@ model User {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   deletedAt     DateTime?
+  auditLogs AuditLog[]  // Add this line to create a relation
+
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  resource  String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
 }
 
 model Pet {
@@ -128,15 +139,6 @@ model Permission {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   deletedAt  DateTime?
-}
-
-model AuditLog {
-  id        String   @id @default(cuid())
-  action    String
-  resource  String
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
 }
 
 enum Role {
