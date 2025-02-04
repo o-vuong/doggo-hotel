@@ -1,11 +1,17 @@
 import React from 'react';
-import { trpc } from '../../utils/trpc';
+import { trpc } from '~/utils/trpc';
 import { useSession } from 'next-auth/react';
 
 const StaffDashboard: React.FC = () => {
   const { data: session } = useSession();
   const { data: kennels } = trpc.kennel.getAll.useQuery();
-  const { data: reservations } = trpc.reservation.getAll.useQuery();
+  const { data: reservations } = trpc.reservation.getAll.useQuery(undefined, {
+    select: (data) => data.map((reservation) => ({
+      ...reservation,
+      pet: { name: reservation.petId }, // Temporary until we implement proper includes
+      user: { email: reservation.userId } // Temporary until we implement proper includes
+    }))
+  });
 
   return (
     <div className="p-6">
