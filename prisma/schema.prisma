@@ -9,19 +9,18 @@ generator client {
 }
 
 model User {
-  id            String       @id @default(cuid())
-  email         String       @unique
-  password      String
-  role          Role        @default(PET_OWNER)
-  tenantId      String       // Multi-tenancy support
-  pets          Pet[]
-  reservations  Reservation[]
-  payments      Payment[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  deletedAt     DateTime?
-  auditLogs AuditLog[]  // Add this line to create a relation
-
+  id           String        @id @default(cuid())
+  email        String        @unique
+  password     String
+  role         Role          @default(PET_OWNER)
+  tenantId     String // Multi-tenancy support
+  pets         Pet[]
+  reservations Reservation[]
+  payments     Payment[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+  auditLogs    AuditLog[] // Add this line to create a relation
 }
 
 model AuditLog {
@@ -34,111 +33,111 @@ model AuditLog {
 }
 
 model Pet {
-  id            String       @id @default(cuid())
-  name          String
-  breed         String
-  age           Int
-  ownerId       String
-  owner         User        @relation(fields: [ownerId], references: [id])
-  medicalInfo   String?     @db.Text
-  dietaryNeeds  String?     @db.Text
-  vaccinations  Vaccination[]
-  reservations  Reservation[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  deletedAt     DateTime?
+  id           String        @id @default(cuid())
+  name         String
+  breed        String
+  age          Int
+  ownerId      String
+  owner        User          @relation(fields: [ownerId], references: [id])
+  medicalInfo  String?       @db.Text
+  dietaryNeeds String?       @db.Text
+  vaccinations Vaccination[]
+  reservations Reservation[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
 }
 
 model Vaccination {
-  id            String       @id @default(cuid())
-  type          String
-  date          DateTime
-  expiryDate    DateTime
-  petId         String
-  pet           Pet         @relation(fields: [petId], references: [id])
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id         String   @id @default(cuid())
+  type       String
+  date       DateTime
+  expiryDate DateTime
+  petId      String
+  pet        Pet      @relation(fields: [petId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model Kennel {
-  id            String       @id @default(cuid())
-  name          String
-  size          KennelSize
-  status        KennelStatus @default(AVAILABLE)
-  price         Float
-  facilityId    String
-  facility      Facility    @relation(fields: [facilityId], references: [id])
-  tenantId      String       // Multi-tenancy support
-  reservations  Reservation[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  deletedAt     DateTime?
+  id           String        @id @default(cuid())
+  name         String
+  size         KennelSize
+  status       KennelStatus  @default(AVAILABLE)
+  price        Float
+  facilityId   String
+  facility     Facility      @relation(fields: [facilityId], references: [id])
+  tenantId     String // Multi-tenancy support
+  reservations Reservation[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
 }
 
 model Reservation {
-  id            String       @id @default(cuid())
+  id            String            @id @default(cuid())
   startDate     DateTime
   endDate       DateTime
   status        ReservationStatus
   petId         String
-  pet           Pet         @relation(fields: [petId], references: [id])
+  pet           Pet               @relation(fields: [petId], references: [id])
   kennelId      String
-  kennel        Kennel      @relation(fields: [kennelId], references: [id])
+  kennel        Kennel            @relation(fields: [kennelId], references: [id])
   userId        String
-  user          User        @relation(fields: [userId], references: [id])
+  user          User              @relation(fields: [userId], references: [id])
   payment       Payment?
   addOnServices AddOnService[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
   deletedAt     DateTime?
 }
 
 model Payment {
-  id            String       @id @default(cuid())
-  amount        Float
-  status        PaymentStatus
+  id              String        @id @default(cuid())
+  amount          Float
+  status          PaymentStatus
   stripePaymentId String?
-  reservationId String      @unique
-  reservation   Reservation @relation(fields: [reservationId], references: [id])
-  userId        String
-  user          User        @relation(fields: [userId], references: [id])
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  deletedAt     DateTime?
+  reservationId   String        @unique
+  reservation     Reservation   @relation(fields: [reservationId], references: [id])
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
 }
 
 model Facility {
-  id            String       @id @default(cuid())
-  name          String
-  address       String
-  phone         String
-  email         String
+  id             String    @id @default(cuid())
+  name           String
+  address        String
+  phone          String
+  email          String
   operatingHours Json
-  kennels       Kennel[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  deletedAt     DateTime?
+  kennels        Kennel[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
 }
 
 model AddOnService {
-  id            String       @id @default(cuid())
-  name          String
-  description   String
-  price         Float
-  reservations  Reservation[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  deletedAt     DateTime?
+  id           String        @id @default(cuid())
+  name         String
+  description  String
+  price        Float
+  reservations Reservation[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
 }
 
 model Permission {
-  id         String  @id @default(cuid())
-  role       Role
-  resource   String
-  action     String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  deletedAt  DateTime?
+  id        String    @id @default(cuid())
+  role      Role
+  resource  String
+  action    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
 
 enum Role {
