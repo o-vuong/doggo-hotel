@@ -1,18 +1,16 @@
-import { initTRPC, TRPCError } from "@trpc/server";
+import { initTRPC, TRPCError } from '@trpc/server';
+import type { Context } from './trpc/context';
 import { getServerAuthSession } from "./auth";
 import { prisma } from "./db";
 import { z } from "zod";
 
-const t = initTRPC
-  .context<{
-    session: ReturnType<typeof getServerAuthSession>;
-    prisma: typeof prisma;
-  }>()
-  .create();
+const t = initTRPC.context<Context>().create();
 
-export const createTRPCRouter = t.router;
-
+export const router = t.router;
 export const publicProcedure = t.procedure;
+export const middleware = t.middleware;
+
+export { TRPCError };
 
 export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
   const session = await ctx.session;
@@ -36,7 +34,7 @@ export const staffProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   return next();
 });
 
-const userRouter = createTRPCRouter({
+const userRouter = router({
   create: protectedProcedure
     .input(
       z.object({
@@ -77,9 +75,12 @@ const userRouter = createTRPCRouter({
       });
       return { message: "User deleted successfully" };
     }),
+  hello: publicProcedure.query(() => {
+    return { greeting: "Hello world" };
+  }),
 });
 
-export const appRouter = createTRPCRouter({
+export const appRouter = router({
   user: userRouter,
 });
 
