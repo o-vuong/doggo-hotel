@@ -9,142 +9,49 @@ generator client {
 }
 
 model User {
-  id           String        @id @default(cuid())
+  id           Int           @id @default(autoincrement())
   email        String        @unique
   password     String
   role         Role          @default(PET_OWNER)
-  tenantId     String // Multi-tenancy support
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   pets         Pet[]
   reservations Reservation[]
-  payments     Payment[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  deletedAt    DateTime?
-  auditLogs    AuditLog[] // Add this line to create a relation
-}
-
-model AuditLog {
-  id        String   @id @default(cuid())
-  action    String
-  resource  String
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-}
-
-model Pet {
-  id           String        @id @default(cuid())
-  name         String
-  breed        String
-  age          Int
-  ownerId      String
-  owner        User          @relation(fields: [ownerId], references: [id])
-  medicalInfo  String?       @db.Text
-  dietaryNeeds String?       @db.Text
-  vaccinations Vaccination[]
-  reservations Reservation[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  deletedAt    DateTime?
-}
-
-model Vaccination {
-  id         String   @id @default(cuid())
-  type       String
-  date       DateTime
-  expiryDate DateTime
-  petId      String
-  pet        Pet      @relation(fields: [petId], references: [id])
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-}
-
-model Kennel {
-  id           String        @id @default(cuid())
-  name         String
-  size         KennelSize
-  status       KennelStatus  @default(AVAILABLE)
-  price        Float
-  facilityId   String
-  facility     Facility      @relation(fields: [facilityId], references: [id])
-  tenantId     String // Multi-tenancy support
-  reservations Reservation[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  deletedAt    DateTime?
-}
-
-model Reservation {
-  id            String            @id @default(cuid())
-  startDate     DateTime
-  endDate       DateTime
-  status        ReservationStatus
-  petId         String
-  pet           Pet               @relation(fields: [petId], references: [id])
-  kennelId      String
-  kennel        Kennel            @relation(fields: [kennelId], references: [id])
-  userId        String
-  user          User              @relation(fields: [userId], references: [id])
-  payment       Payment?
-  addOnServices AddOnService[]
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  deletedAt     DateTime?
-}
-
-model Payment {
-  id              String        @id @default(cuid())
-  amount          Float
-  status          PaymentStatus
-  stripePaymentId String?
-  reservationId   String        @unique
-  reservation     Reservation   @relation(fields: [reservationId], references: [id])
-  userId          String
-  user            User          @relation(fields: [userId], references: [id])
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  deletedAt       DateTime?
-}
-
-model Facility {
-  id             String    @id @default(cuid())
-  name           String
-  address        String
-  phone          String
-  email          String
-  operatingHours Json
-  kennels        Kennel[]
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  deletedAt      DateTime?
-}
-
-model AddOnService {
-  id           String        @id @default(cuid())
-  name         String
-  description  String
-  price        Float
-  reservations Reservation[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  deletedAt    DateTime?
-}
-
-model Permission {
-  id        String    @id @default(cuid())
-  role      Role
-  resource  String
-  action    String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
 }
 
 enum Role {
-  PET_OWNER
-  STAFF
+  SYSTEM_ADMIN
+  FACILITY_ADMIN
   MANAGER
-  ADMIN
+  STAFF
+  PET_OWNER
+}
+
+model Pet {
+  id          Int      @id @default(autoincrement())
+  name        String
+  breed       String?
+  age         Int?
+  vaccinated  Boolean? 
+  ownerId     Int
+  owner       User     @relation(fields: [ownerId], references: [id])
+  createdAt   DateTime @default(now())
+  reservations Reservation[]
+}
+
+model Facility {
+  id       Int      @id @default(autoincrement())
+  name     String
+  location String?
+  kennels Kennel[]
+}
+
+model Kennel {
+  id         Int         @id @default(autoincrement())
+  label      String
+  size       KennelSize
+  facilityId Int
+  facility   Facility    @relation(fields: [facilityId], references: [id])
 }
 
 enum KennelSize {
@@ -154,10 +61,16 @@ enum KennelSize {
   EXTRA_LARGE
 }
 
-enum KennelStatus {
-  AVAILABLE
-  OCCUPIED
-  MAINTENANCE
+model Reservation {
+  id        Int                 @id @default(autoincrement())
+  status    ReservationStatus   @default(PENDING)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  petId     Int
+  pet       Pet                 @relation(fields: [petId], references: [id])
+  userId    Int
+  user      User                @relation(fields: [userId], references: [id])
+  // Additional reservation details (e.g., startDate, endDate) can be added later
 }
 
 enum ReservationStatus {
@@ -166,11 +79,4 @@ enum ReservationStatus {
   CHECKED_IN
   CHECKED_OUT
   CANCELLED
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  REFUNDED
-  FAILED
 }

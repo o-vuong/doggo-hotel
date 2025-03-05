@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
+import bcrypt from "bcrypt"; // Ensure bcrypt is imported for password hashing
 
 // Input validation schemas
 const createUserSchema = z.object({

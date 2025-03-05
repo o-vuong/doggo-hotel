@@ -1,5 +1,47 @@
+import { PrismaClient } from '@prisma/client';
+import { hash } from 'bcrypt';
+
+const prisma = new PrismaClient();
+
+async function main() {
+  // Check if the default user already exists by email
+  const existingUser = await prisma.user.findUnique({
+    where: { email: 'default@example.com' },
+  });
+
+  if (!existingUser) {
+    const defaultPassword = 'defaultpassword';
+    const hashedPassword = await hash(defaultPassword, 10);
+
+    await prisma.user.create({
+      data: {
+        name: 'Default User',
+        email: 'default@example.com',
+        // The field name for the password may depend on your schema.
+        // Adjust the field if your schema uses "hashedPassword" or similar.
+        password: hashedPassword,
+        role: 'CUSTOMER',
+      },
+    });
+    console.log('Default user created.');
+  } else {
+    console.log('Default user already exists.');
+  }
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+
 import { PrismaClient, Role, KennelSize, KennelStatus, ReservationStatus, PaymentStatus } from '@prisma/client';
-import { hash } from 'bcryptjs';
+import bcrypt from 'bcryptjs';
+
+const { hash } = bcrypt;
 
 const prisma = new PrismaClient();
 
@@ -42,8 +84,9 @@ async function main() {
     create: {
       email: 'admin@doggohotel.com',
       password: adminPassword,
-      role: Role.ADMIN,
-      tenantId: facility.id,
+      name: 'Admin User',
+      role: 'ADMIN',
+      tenantId: 'default-tenant',
     },
   });
 
@@ -54,8 +97,9 @@ async function main() {
     create: {
       email: 'manager@doggohotel.com',
       password: managerPassword,
-      role: Role.MANAGER,
-      tenantId: facility.id,
+      name: 'Manager User',
+      role: 'MANAGER',
+      tenantId: 'default-tenant',
     },
   });
 
@@ -66,8 +110,9 @@ async function main() {
     create: {
       email: 'staff@doggohotel.com',
       password: staffPassword,
-      role: Role.STAFF,
-      tenantId: facility.id,
+      name: 'Staff User',
+      role: 'STAFF',
+      tenantId: 'default-tenant',
     },
   });
 
@@ -85,10 +130,11 @@ async function main() {
         where: { email: owner.email },
         update: {},
         create: {
-          ...owner,
+          email: owner.email,
           password,
-          role: Role.PET_OWNER,
-          tenantId: facility.id,
+          name: 'Pet Owner',
+          role: 'PET_OWNER',
+          tenantId: 'default-tenant',
         },
       });
     })
@@ -247,6 +293,27 @@ async function main() {
     reservations: await prisma.reservation.count(),
     payments: await prisma.payment.count(),
   });
+
+  const roles = [
+    'ADMIN',
+    'MANAGER',
+    'STAFF',
+    'PET_OWNER',
+  ];
+
+  for (const role of roles) {
+    await prisma.user.create({
+      data: {
+        email: `${role.toLowerCase()}@example.com`,
+        password: 'password123', // In a real scenario, ensure passwords are hashed
+        name: `${role.replace('_', ' ')} User`,
+        role: role as Role,
+        tenantId: 'default-tenant',
+      },
+    });
+  }
+
+  console.log('Test users created for each role.');
 }
 
 main()
