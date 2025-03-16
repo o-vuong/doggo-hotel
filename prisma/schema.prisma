@@ -17,6 +17,7 @@ model User {
   updatedAt    DateTime      @updatedAt
   pets         Pet[]
   reservations Reservation[]
+  payments     Payment[]     @relation("UserPayments")
 }
 
 enum Role {
@@ -28,34 +29,43 @@ enum Role {
 }
 
 model Pet {
-  id          Int      @id @default(autoincrement())
-  name        String
-  breed       String?
-  age         Int?
-  vaccinated  Boolean? 
-  ownerId     String
-  owner       User     @relation(fields: [ownerId], references: [id])
-  createdAt   DateTime @default(now())
-  reservations Reservation[]
+  id                 Int      @id @default(autoincrement())
+  name               String
+  species            String
+  breed              String?
+  age                Int?
+  vaccinationStatus  String[] @default([])
+  medicalHistory     String?
+  dietaryPreferences String?
+  behavioralNotes    String?
+  emergencyContact   String?
+  ownerId            String
+  owner              User     @relation(fields: [ownerId], references: [id])
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  reservations       Reservation[]
 }
 
 model Facility {
-  id       Int      @id @default(autoincrement())
-  name     String
-  location String?
-  address  String?
-  phone    String?
-  email    String?
+  id             Int      @id @default(autoincrement())
+  name           String
+  location       String?
+  address        String?
+  phone          String?
+  email          String?
   operatingHours String?
-  kennels Kennel[]
+  kennels        Kennel[]
+  capacity       Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model Kennel {
-  id         Int         @id @default(autoincrement())
+  id         Int        @id @default(autoincrement())
   label      String
   size       KennelSize
   facilityId Int
-  facility   Facility    @relation(fields: [facilityId], references: [id])
+  facility   Facility   @relation(fields: [facilityId], references: [id])
 }
 
 enum KennelSize {
@@ -66,14 +76,15 @@ enum KennelSize {
 }
 
 model Reservation {
-  id        Int                 @id @default(autoincrement())
-  status    ReservationStatus   @default(PENDING)
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
+  id        Int               @id @default(autoincrement())
+  status    ReservationStatus @default(PENDING)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
   petId     Int
-  pet       Pet                 @relation(fields: [petId], references: [id])
+  pet       Pet               @relation(fields: [petId], references: [id])
   userId    String
-  user      User                @relation(fields: [userId], references: [id])
+  user      User              @relation(fields: [userId], references: [id])
+  payment   Payment?          @relation("ReservationPayment")
   // Additional reservation details (e.g., startDate, endDate) can be added later
 }
 
@@ -92,9 +103,9 @@ model Payment {
   status          PaymentStatus @default(PENDING)
   stripePaymentId String?
   reservationId   Int           @unique
-  reservation     Reservation   @relation(fields: [reservationId], references: [id])
+  reservation     Reservation   @relation("ReservationPayment", fields: [reservationId], references: [id])
   userId          String
-  user            User          @relation(fields: [userId], references: [id])
+  user            User          @relation("UserPayments", fields: [userId], references: [id])
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 }
