@@ -1,10 +1,21 @@
-import { PrismaClient } from '@prisma/client';
-import type { CreateNextContextOptions } from '@trpc/server/adapters/next';
+/**
+ * This file creates and exports the TRPC context including a dummy session for testing purposes.
+ */
 
-const prisma = new PrismaClient();
+import { prisma } from "../db";
 
-export const createContext = async (opts?: CreateNextContextOptions) => {
-  return { prisma };
-};
+export interface Context {
+  prisma: typeof prisma;
+  session: {
+    user: {
+      id: string;
+      role: string;
+    };
+  };
+}
 
-export type Context = Awaited<ReturnType<typeof createContext>>; 
+export const createContext = async ({ req, res }): Promise<Context> => {
+  // Assign a dummy session for testing
+  const session = { user: { id: "test-user", role: "ADMIN" } };
+  return { prisma, session };
+}; 

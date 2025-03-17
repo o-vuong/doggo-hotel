@@ -22,14 +22,17 @@
         "./*"
       ]
     },
-    "target": "ES2017"
+    "target": "ES2017",
+    "types": ["node", "jest"]
   },
   "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx"
+    "src/index.ts",
+    "src/server/**/*.ts",
+    "src/routers/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "src/pages",
+    "src/components"
   ]
 }

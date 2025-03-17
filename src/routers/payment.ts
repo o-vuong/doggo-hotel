@@ -15,7 +15,7 @@ export const paymentRouter = router({
         status: 'PENDING',
         stripePaymentId: input.stripePaymentId,
         reservation: {
-          connect: { id: input.reservationId.toString() },
+          connect: { id: input.reservationId },
         },
         user: {
           connect: { id: ctx.session.user.id },
