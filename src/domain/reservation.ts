@@ -1,18 +1,26 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../server/trpc';
+import { Prisma } from '@prisma/client';
 
 export const reservationRouter = router({
   createReservation: protectedProcedure.input(
     z.object({
       petId: z.number(),
+      startDate: z.date(),
+      endDate: z.date(),
+      kennelId: z.number(),
+      facilityId: z.number()
     })
   ).mutation(async ({ ctx, input }) => {
-    const reservation = await ctx.prisma.reservation.create({
-      data: {
-        pet: { connect: { id: input.petId } },
-        user: { connect: { id: ctx.session.user.id } },
-      },
-    });
+    const reservationData: Prisma.ReservationCreateInput = {
+      pet: { connect: { id: input.petId } },
+      user: { connect: { id: ctx.session.user.id } },
+      startDate: input.startDate,
+      endDate: input.endDate,
+      kennel: { connect: { id: input.kennelId } },
+      facility: { connect: { id: input.facilityId } }
+    };
+    const reservation = await ctx.prisma.reservation.create({ data: reservationData });
     return reservation;
   }),
 
