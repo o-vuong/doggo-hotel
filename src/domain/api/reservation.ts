@@ -232,4 +232,59 @@ export const reservationRouter = createTRPCRouter({
         },
       });
     }),
+
+  createReservation: protectedProcedure.input(reservationSchema).mutation(async ({ ctx, input }) => {
+    // Creates a new reservation using the provided data and connects related entities
+    const reservation = await ctx.prisma.reservation.create({
+      data: {
+        startDate: input.startDate,
+        endDate: input.endDate,
+        pet: { connect: { id: input.petId } },
+        user: { connect: { id: ctx.session.user.id } },
+        kennel: { connect: { id: input.kennelId } }
+        // Optionally, handle addOnServices if present
+      },
+    });
+    return reservation;
+  }),
+
+  updateReservationStatus: protectedProcedure.input(
+    z.object({
+      id: z.string(),
+      status: z.enum(["PENDING", "CONFIRMED", "CHECKED_IN", "CHECKED_OUT", "CANCELLED"]),
+    })
+  ).mutation(async ({ ctx, input }) => {
+    // Updates the status of an existing reservation
+    const reservation = await ctx.prisma.reservation.update({
+      where: { id: input.id },
+      data: { status: input.status },
+    });
+    return reservation;
+  }),
+
+  checkAvailability: protectedProcedure.input(
+    z.object({
+      startDate: z.date(),
+      endDate: z.date(),
+      facilityId: z.string(),
+      category: z.enum(["SMALL", "MEDIUM", "LARGE", "EXTRA_LARGE"]).optional(),
+    })
+  ).query(async ({ ctx, input }) => {
+    // Returns available kennels in the given facility that have no conflicting reservations
+    const availableKennels = await ctx.prisma.kennel.findMany({
+      where: {
+        facilityId: input.facilityId,
+        ...(input.category ? { category: input.category } : {}),
+        reservations: {
+          none: {
+            AND: [
+              { startDate: { lt: input.endDate } },
+              { endDate: { gt: input.startDate } }
+            ]
+          }
+        }
+      }
+    });
+    return availableKennels;
+  })
 });
