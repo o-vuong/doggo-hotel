@@ -1,4 +1,5 @@
-import { router, protectedProcedure } from '../server/trpc';
+import { z } from 'zod';
+import { router, protectedProcedure } from '../server/trpcBase';
 
 /**
  * Kennel Router (stub)

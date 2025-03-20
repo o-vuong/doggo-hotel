@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, protectedProcedure } from '../server/trpc';
+import { router, protectedProcedure } from '../server/trpcBase';
 
 /**
  * Payment Router

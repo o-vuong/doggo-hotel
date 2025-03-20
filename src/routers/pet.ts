@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, protectedProcedure } from '../server/trpc';
+import { router, protectedProcedure } from '../server/trpcBase';
 
 /**
  * Pet Router
@@ -20,7 +20,7 @@ export const petRouter = router({
             emergencyContact: z.string().optional(),
         })
     ).mutation(async ({ ctx, input }) => {
-        const pet = await ctx.prisma.pet.create({
+        return await ctx.prisma.pet.create({
             data: {
                 name: input.name,
                 species: input.species,
@@ -34,7 +34,6 @@ export const petRouter = router({
                 owner: { connect: { id: ctx.session.user.id } },
             },
         });
-        return pet;
     }),
 
     getPets: protectedProcedure.query(async ({ ctx }) => {
