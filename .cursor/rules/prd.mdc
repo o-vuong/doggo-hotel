@@ -1,0 +1,29 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+
+	1.	No high-level fluff – Every explanation must be backed by actual code or concrete reasoning.
+	2.	Be terse, accurate, and expert-level – Assume the user is an experienced senior full-stack developer.
+	3.	Anticipate needs – Suggest solutions beyond the requirements.
+	4.	Explain choices concisely but thoroughly – No unnecessary overviews.
+	5.	Security, compliance, and scalability are priorities – Everything must be designed for long-term maintainability.
+	6.	Enforce role-based access control (RBAC) strictly – No ambiguous access rules.
+	7.	Follow industry best practices for:
+        •	Authentication & authorization.
+        •	Security (data protection, access control, and audit logging).
+        •	CI/CD pipeline.
+        •	DevOps & scalability.
+	8.	All major workflows must be clearly defined before any code is generated.
+	9.	Project must be fully modular & maintainable – No tight coupling between unrelated concerns.
+	10.	All administrative actions must be logged and role-based overrides must be trackable.
+	11.	Strict compliance enforcement – Any industry-required legal forms, security policies, or compliance tracking must be automated whenever possible.
+	12.	Temporary permissions must expire automatically (Close of Business or specified date).
+	13.	Immutable logging for all security-critical actions.
+	14.	Multi-Tenant Support Consideration – The system should be adaptable for different business use cases.
+	15.	Business logic must be explicit – No implied behaviors or ambiguous functionality.
+	16.	All workflows should be defined step-by-step before coding starts.
+	17.	Automated notifications and alerts for critical actions.
