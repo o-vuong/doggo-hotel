@@ -6,9 +6,11 @@ async function main() {
   const now = new Date();
   const threeDaysLater = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
 
-  // Create an admin user with a password
-  const admin = await prisma.user.create({
-    data: {
+  // Create an admin user with a password, using upsert to avoid duplicates
+  const admin = await prisma.user.upsert({
+    where: { email: "admin@example.com" },
+    update: {},
+    create: {
       email: "admin@example.com",
       password: "password", // plaintext for seeding; use hash in production
       role: "SYSTEM_ADMIN",
@@ -56,14 +58,20 @@ async function main() {
     },
   });
 
-  // Create a waitlist entry. Since the PrismaClient types may not expose the waitlist model,
-  // we cast prisma to any to bypass the type error.
-  await (prisma as any).waitlist.create({
-    data: {
-      reservation: { connect: { id: reservation.id } },
-      user: { connect: { id: admin.id } },
-    },
-  });
+  // Create a waitlist entry linking the reservation and the user, if the model exists
+  if (
+    (prisma as any).waitlist &&
+    typeof (prisma as any).waitlist.create === "function"
+  ) {
+    await (prisma as any).waitlist.create({
+      data: {
+        reservation: { connect: { id: reservation.id } },
+        user: { connect: { id: admin.id } },
+      },
+    });
+  } else {
+    console.warn("Waitlist model not defined, skipping waitlist seeding.");
+  }
 
   console.log("Database seeded successfully");
 }
