@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { hash } from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -6,13 +7,14 @@ async function main() {
   const now = new Date();
   const threeDaysLater = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
 
-  // Create an admin user with a password, using upsert to avoid duplicates
+  // Create an admin user with a hashed password
+  const hashedPassword = await hash("admin123", 12);
   const admin = await prisma.user.upsert({
     where: { email: "admin@example.com" },
     update: {},
     create: {
       email: "admin@example.com",
-      password: "password", // plaintext for seeding; use hash in production
+      password: hashedPassword,
       role: "SYSTEM_ADMIN",
     },
   });
