@@ -219,3 +219,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 For support, email support@doggohotel.com or join our Slack channel.
+
+## PWA Setup
+The app is configured as a Progressive Web App (PWA). To complete the setup:
+
+1. Replace the placeholder icons in `public/icons/` with your actual app icons:
+   - `icon-192x192.png`
+   - `icon-512x512.png`
+   
+   These icons are currently placeholders and should be replaced with your branded icons before production deployment.
