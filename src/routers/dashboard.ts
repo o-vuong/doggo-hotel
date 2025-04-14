@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../server/trpc';
+ 
 import { subDays } from 'date-fns';
 
 /**
@@ -42,10 +43,16 @@ export const dashboardRouter = router({
             where: { createdAt: { gte: thirtyDaysAgo } },
         });
 
+        const marketingContent = await ctx.prisma.marketingContent.findFirst({
+            orderBy: { updatedAt: 'desc' },
+        });
+        const marketingCopy = marketingContent?.content ?? '';
+
         return {
             totalRevenue,
             occupancyRates,
             recentBookings,
+            marketingCopy
         };
     }),
 }); 

@@ -75,6 +75,16 @@ async function main() {
     console.warn("Waitlist model not defined, skipping waitlist seeding.");
   }
 
+  // Seed marketing content if not already present
+  const existingMarketing = await prisma.marketingContent.findFirst();
+  if (!existingMarketing) {
+    await prisma.marketingContent.create({
+      data: {
+        content: "Welcome to Doggo Hotel! Where we treat your pet like family.",
+      },
+    });
+  }
+
   console.log("Database seeded successfully");
 }
 

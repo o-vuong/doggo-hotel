@@ -3,9 +3,11 @@
 ## **1. Executive Summary**
 
 ### **1.1 Product Vision**
+
 A modern, secure, and scalable dog boarding facility management system built with the T3 Stack, providing comprehensive solutions for pet boarding facilities, their staff, and pet owners.
 
 ### **1.2 Core Technology Stack**
+
 - **Frontend**: Next.js, TypeScript, TailwindCSS, Radix UI
 - **Backend**: tRPC, Prisma, PostgreSQL
 - **Authentication**: NextAuth.js
@@ -16,14 +18,16 @@ A modern, secure, and scalable dog boarding facility management system built wit
 ## **2. System Architecture**
 
 ### **2.1 Microservices Architecture**
+
 - User Service
 - Pet Service
 - Kennel Service
 - Reservation Service
-- Payment Service 
+- Payment Service
 - Facility Service
 
 ### **2.2 Database Design**
+
 - PostgreSQL with Prisma ORM
 - Multi-tenant architecture
 - Soft deletion support
@@ -33,6 +37,7 @@ A modern, secure, and scalable dog boarding facility management system built wit
 ## **3. Core Features & Implementation**
 
 ### **3.1 Authentication & Authorization**
+
 - **Technology**: NextAuth.js with JWT strategy
 - **Role Hierarchy**:
   - System Admin
@@ -47,6 +52,7 @@ A modern, secure, and scalable dog boarding facility management system built wit
   - Audit logging for all permission changes
 
 ### **3.2 Pet Management**
+
 - **Features**:
   - Comprehensive pet profiles
   - Vaccination tracking
@@ -60,6 +66,7 @@ A modern, secure, and scalable dog boarding facility management system built wit
   - Automated vaccination reminders
 
 ### **3.3 Reservation System**
+
 - **Features**:
   - Real-time availability checking
   - Waitlist management
@@ -71,6 +78,7 @@ A modern, secure, and scalable dog boarding facility management system built wit
   - CANCELLED (can occur at any stage)
 
 ### **3.4 Payment Processing**
+
 - **Integration**: Stripe API
 - **Features**:
   - Secure payment processing
@@ -85,6 +93,7 @@ A modern, secure, and scalable dog boarding facility management system built wit
   - FAILED
 
 ### **3.5 Facility Management**
+
 - **Features**:
   - Multi-location support
   - Kennel management
@@ -98,6 +107,7 @@ A modern, secure, and scalable dog boarding facility management system built wit
   - EXTRA_LARGE
 
 ### **3.6 Dashboard & Analytics**
+
 - **Metrics**:
   - Occupancy rates
   - Revenue tracking
@@ -111,12 +121,14 @@ A modern, secure, and scalable dog boarding facility management system built wit
 ## **4. User Interfaces**
 
 ### **4.1 Component Architecture**
+
 - Atomic design principles
 - Reusable UI components
 - Responsive layouts
 - Accessibility compliance
 
 ### **4.2 Role-Specific Dashboards**
+
 - **Admin Dashboard**:
   - System-wide metrics
   - User management
@@ -133,6 +145,7 @@ A modern, secure, and scalable dog boarding facility management system built wit
 ## **5. Forms & Documentation**
 
 ### **5.1 Digital Forms**
+
 - Registration forms
 - Pet intake forms
 - Reservation forms
@@ -140,6 +153,7 @@ A modern, secure, and scalable dog boarding facility management system built wit
 - Staff management forms
 
 ### **5.2 Legal Documentation**
+
 - Liability waivers
 - Boarding agreements
 - Veterinary release forms
@@ -149,12 +163,14 @@ A modern, secure, and scalable dog boarding facility management system built wit
 ## **6. Security & Compliance**
 
 ### **6.1 Data Security**
+
 - Encrypted data storage
 - Secure session management
 - Role-based access control
 - Audit logging
 
 ### **6.2 Business Rules**
+
 - Automated compliance checks
 - Vaccination verification
 - Payment authorization
@@ -163,6 +179,7 @@ A modern, secure, and scalable dog boarding facility management system built wit
 ## **7. Technical Requirements**
 
 ### **7.1 Development Environment**
+
 ```bash
 # Required software
 Node.js 16+
@@ -172,6 +189,7 @@ Stripe CLI
 ```
 
 ### **7.2 Environment Variables**
+
 ```env
 DATABASE_URL
 NEXTAUTH_SECRET
@@ -184,12 +202,14 @@ STRIPE_PUBLIC_KEY
 ## **8. Deployment & Scaling**
 
 ### **8.1 Infrastructure**
+
 - Containerized deployment
 - Horizontal scaling support
 - Redis caching layer
 - Message queue system
 
 ### **8.2 Performance Requirements**
+
 - Sub-second response times
 - 99.9% uptime
 - Automatic failover
@@ -211,4 +231,4 @@ STRIPE_PUBLIC_KEY
 - Processing time for bookings
 - Revenue per available kennel
 - Customer retention rate
-- Staff efficiency metrics 
+- Staff efficiency metrics

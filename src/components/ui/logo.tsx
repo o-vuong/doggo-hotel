@@ -1,8 +1,11 @@
+import React from "react";
+import Link from "next/link";
+
 export function Logo() {
   return (
-    <div className="flex items-center">
+    <Link href="/dashboard" className="flex items-center gap-2">
       <span className="text-2xl">🐕</span>
-      <span className="ml-2 text-xl font-semibold">Doggo Hotel</span>
-    </div>
+      <span className="text-xl font-bold text-primary">Saint Tropawz</span>
+    </Link>
   );
 }
