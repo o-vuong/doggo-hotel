@@ -13,11 +13,13 @@ model User {
   email        String        @unique
   password     String
   role         Role          @default(PET_OWNER)
+  permissions  Permission[]  @relation("UserPermissions")
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   pets         Pet[]
   reservations Reservation[]
   payments     Payment[]     @relation("UserPayments")
+  legalAgreements UserLegalAgreement[]
 }
 
 enum Role {
@@ -44,6 +46,7 @@ model Pet {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   reservations       Reservation[]
+  vaccinations       Vaccination[]
 }
 
 model Facility {
@@ -96,6 +99,14 @@ model Reservation {
   facilityId Int
   facility   Facility          @relation("FacilityReservations", fields: [facilityId], references: [id])
   payment    Payment?          @relation("ReservationPayment")
+  actualCheckOut DateTime?
+  isOverstay  Boolean         @default(false)
+  overstayDays Int           @default(0)
+  overstayFee  Float?
+  contactAttempts Int        @default(0)
+  lastContactAttempt DateTime?
+  emergencyContactNotified Boolean @default(false)
+  legalEscalationStarted Boolean @default(false)
 }
 
 enum ReservationStatus {
@@ -118,6 +129,15 @@ model Payment {
   user            User          @relation("UserPayments", fields: [userId], references: [id])
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+  retryCount      Int          @default(0)
+  maxRetries      Int          @default(3)
+  lastRetryAt     DateTime?
+  dueDate         DateTime?
+  isDeferred      Boolean      @default(false)
+  adminOverride   Boolean      @default(false)
+  refundRequested Boolean      @default(false)
+  refundApproved  Boolean      @default(false)
+  refundReason    String?
 }
 
 enum PaymentStatus {
@@ -125,4 +145,45 @@ enum PaymentStatus {
   PAID
   REFUNDED
   FAILED
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  users       User[]   @relation("UserPermissions")
+}
+
+model Vaccination {
+  id          Int      @id @default(autoincrement())
+  name        String
+  expiryDate  DateTime
+  petId       Int
+  pet         Pet      @relation(fields: [petId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model LegalDocument {
+  id          Int      @id @default(autoincrement())
+  name        String
+  content     String
+  version     String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userAgreements UserLegalAgreement[]
+}
+
+model UserLegalAgreement {
+  id            Int          @id @default(autoincrement())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id])
+  documentId    Int
+  document      LegalDocument @relation(fields: [documentId], references: [id])
+  agreedAt      DateTime     @default(now())
+  ipAddress     String?
+  userAgent     String?
 }
