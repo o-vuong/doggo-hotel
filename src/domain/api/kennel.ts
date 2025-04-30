@@ -15,6 +15,7 @@ import {
   adminProcedure,
   staffProcedure,
 } from "../trpc";
+import type { PrismaClient } from "@prisma/client";
 
 /**
  * Input validation schema for creating/updating a kennel
@@ -30,6 +31,50 @@ const kennelSchema = z.object({
   notes: z.string().optional(),
   maxWeight: z.number().positive("Maximum weight must be positive"),
 });
+
+const checkKennelAvailability = async (
+  prisma: PrismaClient,
+  kennelId: number,
+  startDate: Date,
+  endDate: Date,
+  excludeReservationId?: number
+) => {
+  const overlappingReservations = await prisma.reservation.findMany({
+    where: {
+      kennelId,
+      id: { not: excludeReservationId },
+      status: { not: "CANCELLED" },
+      OR: [
+        {
+          startDate: { lte: endDate },
+          endDate: { gte: startDate },
+        },
+      ],
+    },
+    include: {
+      pet: true,
+      user: true,
+    },
+  });
+
+  if (overlappingReservations.length > 0) {
+    const conflicts = overlappingReservations.map((res) => ({
+      reservationId: res.id,
+      petName: res.pet.name,
+      ownerName: res.user.email,
+      startDate: res.startDate,
+      endDate: res.endDate,
+    }));
+
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: "Kennel is not available for the selected dates",
+      cause: conflicts,
+    });
+  }
+
+  return true;
+};
 
 export const kennelRouter = createTRPCRouter({
   /**
@@ -63,7 +108,22 @@ export const kennelRouter = createTRPCRouter({
       }).optional()
     )
     .query(async ({ ctx, input }) => {
-      const where: any = {};
+      const where: {
+        status?: string;
+        size?: string;
+        OR?: Array<{
+          status: string;
+        } | {
+          reservations: {
+            none: {
+              OR: Array<{
+                startDate: { lte: Date };
+                endDate: { gte: Date };
+              }>;
+            };
+          };
+        }>;
+      } = {};
 
       if (input?.status) {
         where.status = input.status;
@@ -243,42 +303,19 @@ export const kennelRouter = createTRPCRouter({
   checkAvailability: protectedProcedure
     .input(
       z.object({
-        kennelId: z.string(),
+        kennelId: z.number(),
         startDate: z.date(),
         endDate: z.date(),
+        excludeReservationId: z.number().optional(),
       })
     )
-    .query(async ({ ctx, input }) => {
-      const kennel = await ctx.prisma.kennel.findUnique({
-        where: { id: input.kennelId },
-        include: {
-          reservations: {
-            where: {
-              OR: [
-                {
-                  startDate: {
-                    lte: input.endDate,
-                  },
-                  endDate: {
-                    gte: input.startDate,
-                  },
-                },
-              ],
-            },
-          },
-        },
-      });
-
-      if (!kennel) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Kennel not found",
-        });
-      }
-
-      return {
-        isAvailable: kennel.status === "AVAILABLE" && kennel.reservations.length === 0,
-        currentReservations: kennel.reservations,
-      };
+    .mutation(async ({ ctx, input }) => {
+      return checkKennelAvailability(
+        ctx.prisma,
+        input.kennelId,
+        input.startDate,
+        input.endDate,
+        input.excludeReservationId
+      );
     }),
 });
